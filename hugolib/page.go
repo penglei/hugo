@@ -18,10 +18,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gohugoio/hugo/common/hugo"
 	"math/rand"
 	"reflect"
-
-	"github.com/gohugoio/hugo/common/hugo"
 
 	"github.com/gohugoio/hugo/common/maps"
 	"github.com/gohugoio/hugo/common/urls"
@@ -73,6 +72,8 @@ var (
 
 	// Page supports ref and relref
 	_ urls.RefLinker = (*Page)(nil)
+
+	summaryWithNoToc = regexp.MustCompile(`<div id="preamble">`)
 )
 
 // Wraps a Page.
@@ -715,7 +716,7 @@ func (p *Page) UniqueID() string {
 // Returns the page as summary and main.
 func (p *Page) setUserDefinedSummary(rawContentCopy []byte) (*summaryContent, error) {
 
-	sc, err := splitUserDefinedSummaryAndContent(p.Markup, rawContentCopy)
+	sc, err := splitUserDefinedSummaryAndContent(p.Markup, rawContentCopy, false)
 
 	if err != nil {
 		return nil, err
@@ -737,7 +738,7 @@ type summaryContent struct {
 	content []byte
 }
 
-func splitUserDefinedSummaryAndContent(markup string, c []byte) (sc *summaryContent, err error) {
+func splitUserDefinedSummaryAndContent(markup string, c []byte, showSummaryToc bool) (sc *summaryContent, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("summary split failed: %s", r)
@@ -773,13 +774,6 @@ func splitUserDefinedSummaryAndContent(markup string, c []byte) (sc *summaryCont
 		end = startDivider + end + len(startTag) + 3
 	}
 
-	var addDiv bool
-
-	switch markup {
-	case "rst":
-		addDiv = true
-	}
-
 	withoutDivider := append(c[:start], bytes.Trim(c[end:], "\n")...)
 
 	var summary []byte
@@ -788,15 +782,18 @@ func splitUserDefinedSummaryAndContent(markup string, c []byte) (sc *summaryCont
 		summary = bytes.TrimSpace(withoutDivider[:start])
 	}
 
-	if addDiv {
+	if markup == "rst" {
 		// For the rst
 		summary = append(append([]byte(nil), summary...), []byte("</div>")...)
 	}
-
-	if err != nil {
-		return
+	if markup == "asciidoc" {
+		summary = append(append([]byte(nil), summary...), []byte("</div></div>")...)
+		if !showSummaryToc {
+			if indexes := summaryWithNoToc.FindIndex(summary); indexes != nil {
+				summary = summary[indexes[0]:]
+			}
+		}
 	}
-
 	sc = &summaryContent{
 		summary: summary,
 		content: bytes.TrimSpace(withoutDivider),

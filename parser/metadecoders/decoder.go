@@ -27,7 +27,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"github.com/spf13/cast"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Decoder provides some configuration options for the decoders.

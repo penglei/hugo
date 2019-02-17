@@ -16,9 +16,8 @@ package parser
 import (
 	"encoding/json"
 	"errors"
-	"io"
-
 	"github.com/gohugoio/hugo/parser/metadecoders"
+	"io"
 
 	"github.com/BurntSushi/toml"
 

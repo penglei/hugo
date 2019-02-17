@@ -109,6 +109,7 @@ var (
 	summaryDividerOrg = []byte("# more")
 	delimTOML         = []byte("+++")
 	delimYAML         = []byte("---")
+	delimYAMLCommentStyle = []byte("////")
 	delimOrg          = []byte("#+")
 	htmlCommentStart  = []byte("<!--")
 	htmlCommentEnd    = []byte("-->")

@@ -30,6 +30,11 @@ LOOP:
 		switch {
 		case r == '+':
 			return l.lexFrontMatterSection(TypeFrontMatterTOML, r, "TOML", delimTOML)
+		case r == '/':
+			if l.pos > 1 {
+				continue
+			}
+			return l.lexFrontMatterSection(TypeFrontMatterYAML, r, "YAML", delimYAMLCommentStyle)
 		case r == '-':
 			return l.lexFrontMatterSection(TypeFrontMatterYAML, r, "YAML", delimYAML)
 		case r == '{':
@@ -164,7 +169,12 @@ LOOP:
 // Handle YAML or TOML front matter.
 func (l *pageLexer) lexFrontMatterSection(tp ItemType, delimr rune, name string, delim []byte) stateFunc {
 
-	for i := 0; i < 2; i++ {
+	var remaining = 2
+	if delimr == '/' {
+		remaining = 3
+	}
+
+	for i := 0; i < remaining; i++ {
 		if r := l.next(); r != delimr {
 			return l.errorf("invalid %s delimiter", name)
 		}
@@ -188,7 +198,7 @@ func (l *pageLexer) lexFrontMatterSection(tp ItemType, delimr rune, name string,
 		if wasEndOfLine || isEndOfLine(r) {
 			if l.hasPrefix(delim) {
 				l.emit(tp)
-				l.pos += 3
+				l.pos += remaining + 1
 				l.consumeCRLF()
 				l.ignore()
 				break
