@@ -175,7 +175,7 @@ func newPageContentOutput(p *pageState, po *pageOutput) (*pageContentOutput, err
 					}
 
 				} else {
-					summary, content, err := splitUserDefinedSummaryAndContent(cp.p.m.markup, cp.workContent)
+					summary, content, err := splitUserDefinedSummaryAndContent(cp.p.m.markup, cp.workContent, false)
 					if err != nil {
 						cp.p.s.Log.ERROR.Printf("Failed to set user defined summary for page %q: %s", cp.p.pathOrTitle(), err)
 					} else {
@@ -481,7 +481,7 @@ func executeToString(h tpl.TemplateHandler, templ tpl.Template, data interface{}
 
 }
 
-func splitUserDefinedSummaryAndContent(markup string, c []byte) (summary []byte, content []byte, err error) {
+func splitUserDefinedSummaryAndContent(markup string, c []byte, showSummaryToc bool) (summary []byte, content []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("summary split failed: %s", r)
@@ -533,6 +533,15 @@ func splitUserDefinedSummaryAndContent(markup string, c []byte) (summary []byte,
 	if addDiv {
 		// For the rst
 		summary = append(append([]byte(nil), summary...), []byte("</div>")...)
+	}
+
+	if markup == "asciidoc" {
+		summary = append(append([]byte(nil), summary...), []byte("</div></div>")...)
+		if !showSummaryToc {
+			if index := bytes.Index(summary, []byte(`<div id="preamble">`)); index != -1 {
+				summary = summary[index:]
+			}
+		}
 	}
 
 	if err != nil {
