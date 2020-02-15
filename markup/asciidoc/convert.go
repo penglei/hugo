@@ -69,12 +69,13 @@ func (a *asciidocConverter) getAsciidocContent(src []byte, ctx converter.Documen
 	}
 
 	a.cfg.Logger.INFO.Println("Rendering", ctx.DocumentName, "with", path, "...")
+
 	args := []string{"--no-header-footer", "--safe"}
 	if isAsciidoctor {
 		// asciidoctor-specific arg to show stack traces on errors
 		args = append(args, "--trace")
 	}
-	args = append(args, "-")
+	args = append(args, "-r", "asciidoctor-bibtex", "-r", "asciidoctor-diagram", "-")
 	return internal.ExternallyRenderContent(a.cfg, ctx, src, path, args)
 }
 
