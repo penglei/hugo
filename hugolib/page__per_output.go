@@ -498,7 +498,6 @@ func splitUserDefinedSummaryAndContent(markup string, c []byte, showSummaryToc b
 	switch markup {
 	case "asciidoc":
 		startTag = "div"
-
 	}
 
 	// Walk back and forward to the surrounding tags.
@@ -536,10 +535,11 @@ func splitUserDefinedSummaryAndContent(markup string, c []byte, showSummaryToc b
 	}
 
 	if markup == "asciidoc" {
-		summary = append(append([]byte(nil), summary...), []byte("</div></div>")...)
 		if !showSummaryToc {
 			if index := bytes.Index(summary, []byte(`<div id="preamble">`)); index != -1 {
 				summary = summary[index:]
+				summary = append(append([]byte(nil), summary...), []byte("</div></div>")...)
+				//summary = append(summary, []byte("</div></div>")...)
 			}
 		}
 	}
